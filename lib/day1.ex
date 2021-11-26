@@ -7,6 +7,7 @@ defmodule Aoc2021.Day1 do
     :ok
   """
   def p1() do
+    "test" |> IO.inspect()
     :ok
   end
 end
