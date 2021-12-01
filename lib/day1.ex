@@ -12,9 +12,9 @@ defmodule Aoc2021.Day1 do
   def p2(), do: parse_input() |> count_increases(3)
 
   defp count_increases(list, offset) do
-    list_offset = Enum.slice(list, offset, Enum.count(list))
-
-    Enum.zip(list, list_offset)
+    list
+    |> Enum.drop(offset)
+    |> Enum.zip(list)
     |> Enum.count(fn {x, y} -> y > x end)
   end
 
