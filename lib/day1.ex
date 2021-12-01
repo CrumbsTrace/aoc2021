@@ -1,26 +1,21 @@
 defmodule Aoc2021.Day1 do
-  @doc """
-    iex> Aoc2021.Day1.p1()
-    1154
-  """
-  def p1(), do: parse_input() |> count_increases(1)
+  import Aoc2021.Helpers
 
   @doc """
-    iex> Aoc2021.Day1.p2()
+    iex> Aoc2021.Day1.p1("inputs/day1.txt")
+    1154
+    iex> Aoc2021.Day1.p2("inputs/day1.txt")
     1127
   """
-  def p2(), do: parse_input() |> count_increases(3)
+  def p1(file), do: parse_number_input(file) |> count_increases(1)
+  def p2(file), do: parse_number_input(file) |> count_increases(3)
 
   defp count_increases(list, offset) do
     list
     |> Enum.drop(offset)
-    |> Enum.zip(list)
-    |> Enum.count(fn {x, y} -> y > x end)
+    |> Enum.zip_reduce(list, 0, &increment_if_increase/3)
   end
 
-  defp parse_input() do
-    File.read!("inputs/day1.txt")
-    |> String.split("\n", trim: true)
-    |> Enum.map(&String.to_integer/1)
-  end
+  defp increment_if_increase(x, y, acc) when x > y, do: acc + 1
+  defp increment_if_increase(_, _, acc), do: acc
 end
