@@ -22,7 +22,7 @@ defmodule Aoc2021.Day2 do
 
   defp process_input(file), do: parse_input(:lines_spaces, file) |> Enum.map(&translate/1)
 
-  defp update_state({dx, dy}, {x, y, aim}), do: {x + dx, aim * dx + y, aim + dy}
+  defp update_state({dx, dy}, {x, y, aim}), do: {x + dx, y + dx * aim, aim + dy}
   defp update_state({dx, dy}, {x, y}), do: {x + dx, y + dy}
 
   defp translate(["forward", dx]), do: {String.to_integer(dx), 0}
