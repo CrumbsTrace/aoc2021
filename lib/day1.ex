@@ -4,6 +4,7 @@ defmodule Aoc2021.Day1 do
   @doc """
     iex> Aoc2021.Day1.p1("inputs/day1.txt")
     1154
+
     iex> Aoc2021.Day1.p2("inputs/day1.txt")
     1127
   """
