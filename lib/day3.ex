@@ -18,7 +18,7 @@ defmodule Aoc2021.Day3 do
 
   defp get_gamma_and_epsilon(common_bits) do
     gamma = unbits(common_bits)
-    epsilon = Enum.map(common_bits, &(1 - &1)) |> unbits()
+    epsilon = Integer.pow(2, length(common_bits)) - gamma - 1
     gamma * epsilon
   end
 
