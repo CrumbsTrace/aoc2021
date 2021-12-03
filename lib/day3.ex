@@ -26,25 +26,17 @@ defmodule Aoc2021.Day3 do
   def p2(file) do
     parse_input(:lines_characters, file)
     |> Enum.map(&parse_bit_strings/1)
-    |> then(&get_oxygen_and_co2(&1, &1, 0))
+    |> then(&(p2_filter_input(&1, 0, true) * p2_filter_input(&1, 0, false)))
   end
 
-  defp get_oxygen_and_co2([oxygen], [co2], _), do: unbits(oxygen) * unbits(co2)
+  defp p2_filter_input([result], _, _), do: unbits(result)
 
-  defp get_oxygen_and_co2(oxygen_list, co2_list, index) do
-    filtered_oxygen = filter_bitstrings(oxygen_list, index, false)
-    filtered_co2 = filter_bitstrings(co2_list, index, true)
-    get_oxygen_and_co2(filtered_oxygen, filtered_co2, index + 1)
-  end
+  defp p2_filter_input(list, index, invert) do
+    common_bit = get_bit_row(list, index) |> common_bit()
+    desired_bit = if invert, do: 1 - common_bit, else: common_bit
 
-  defp filter_bitstrings(list, index, invert) do
-    if length(list) == 1 do
-      list
-    else
-      common_bit = get_bit_row(list, index) |> common_bit()
-      check_value = if invert, do: 1 - common_bit, else: common_bit
-      Enum.filter(list, &(Enum.at(&1, index) == check_value))
-    end
+    filtered = Enum.filter(list, fn bits -> Enum.at(bits, index) == desired_bit end)
+    p2_filter_input(filtered, index + 1, invert)
   end
 
   # Generic helpers
