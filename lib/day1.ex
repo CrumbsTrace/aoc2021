@@ -4,11 +4,13 @@ defmodule Aoc2021.Day1 do
   @doc """
     iex> Aoc2021.Day1.p1("inputs/day1.txt")
     1154
+  """
+  def p1(file), do: parse_number_input(file) |> count_increases(1)
 
+  @doc """
     iex> Aoc2021.Day1.p2("inputs/day1.txt")
     1127
   """
-  def p1(file), do: parse_number_input(file) |> count_increases(1)
   def p2(file), do: parse_number_input(file) |> count_increases(3)
 
   defp count_increases(list, offset) do

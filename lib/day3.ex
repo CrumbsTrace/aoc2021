@@ -4,9 +4,6 @@ defmodule Aoc2021.Day3 do
   @doc """
     iex> Aoc2021.Day3.p1("inputs/day3.txt")
     845186
-
-    iex> Aoc2021.Day3.p2("inputs/day3.txt")
-    4636702
   """
   # Part 1
   def p1(file) do
@@ -23,6 +20,10 @@ defmodule Aoc2021.Day3 do
   end
 
   # Part 2
+  @doc """
+    iex> Aoc2021.Day3.p2("inputs/day3.txt")
+    4636702
+  """
   def p2(file) do
     parse_input(:lines_characters, file)
     |> Enum.map(&parse_bit_strings/1)

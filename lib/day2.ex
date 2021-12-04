@@ -4,9 +4,6 @@ defmodule Aoc2021.Day2 do
   @doc """
     iex> Aoc2021.Day2.p1("inputs/day2.txt")
     1488669
-
-    iex> Aoc2021.Day2.p2("inputs/day2.txt")
-    1176514794
   """
   def p1(file) do
     process_input(file)
@@ -14,6 +11,10 @@ defmodule Aoc2021.Day2 do
     |> Tuple.product()
   end
 
+  @doc """
+    iex> Aoc2021.Day2.p2("inputs/day2.txt")
+    1176514794
+  """
   def p2(file) do
     process_input(file)
     |> Enum.reduce({0, 0, 0}, &update_state/2)

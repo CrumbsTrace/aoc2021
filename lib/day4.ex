@@ -4,9 +4,6 @@ defmodule Aoc2021.Day4 do
   @doc """
     iex> Aoc2021.Day4.p1("inputs/day4.txt")
     89001
-
-    iex> Aoc2021.Day4.p2("inputs/day4.txt")
-    7296
   """
   def p1(file) do
     parse_input(:lines, file)
@@ -14,6 +11,10 @@ defmodule Aoc2021.Day4 do
     |> BingoSystem.run_till_winner()
   end
 
+  @doc """
+      iex> Aoc2021.Day4.p2("inputs/day4.txt")
+      7296
+  """
   def p2(file) do
     parse_input(:lines, file)
     |> BingoSystem.create()
