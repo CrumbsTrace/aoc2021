@@ -6,8 +6,7 @@ defmodule Aoc2021.Helpers do
   def parse_input(:lines, file_name), do: File.read!(file_name) |> String.split("\n", trim: true)
 
   def parse_input(:lines_spaces, file_name) do
-    File.read!(file_name)
-    |> String.split("\n", trim: true)
+    parse_input(:lines, file_name)
     |> Enum.map(&String.split(&1, " "))
   end
 
