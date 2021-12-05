@@ -1,6 +1,7 @@
 defmodule Aoc2021.Day4 do
   import Aoc2021.Helpers
 
+  @spec p1(binary()) :: number()
   @doc """
     iex> Aoc2021.Day4.p1("inputs/day4.txt")
     89001
@@ -11,6 +12,7 @@ defmodule Aoc2021.Day4 do
     |> BingoSystem.run_till_winner()
   end
 
+  @spec p2(binary()) :: number()
   @doc """
       iex> Aoc2021.Day4.p2("inputs/day4.txt")
       7296
@@ -23,8 +25,15 @@ defmodule Aoc2021.Day4 do
 end
 
 defmodule BingoSystem do
+  @enforce_keys [:draw_numbers, :boards]
   defstruct [:draw_numbers, :boards]
 
+  @type t :: %__MODULE__{
+          draw_numbers: [non_neg_integer],
+          boards: [Board.t()]
+        }
+
+  @spec create([binary()]) :: BingoSystem.t()
   def create(input) do
     draw_numbers =
       Enum.at(input, 0)
@@ -35,6 +44,7 @@ defmodule BingoSystem do
     %BingoSystem{draw_numbers: draw_numbers, boards: boards}
   end
 
+  @spec find_last_winning_board(BingoSystem.t()) :: non_neg_integer()
   def find_last_winning_board(%BingoSystem{draw_numbers: [n | draws], boards: boards}) do
     new_boards = Enum.map(boards, fn board -> Board.update_board(board, n) end)
 
@@ -47,6 +57,7 @@ defmodule BingoSystem do
     end
   end
 
+  @spec run_till_winner(BingoSystem.t()) :: number()
   def run_till_winner(%BingoSystem{draw_numbers: [n | draws], boards: boards}) do
     new_boards = Enum.map(boards, fn board -> Board.update_board(board, n) end)
 
@@ -61,8 +72,17 @@ defmodule BingoSystem do
 end
 
 defmodule Board do
+  @enforce_keys [:number_map, :row_visits, :column_visits, :visited]
   defstruct [:number_map, :row_visits, :column_visits, :visited]
 
+  @type t :: %__MODULE__{
+          number_map: %{non_neg_integer() => {non_neg_integer(), non_neg_integer()}},
+          row_visits: %{non_neg_integer() => non_neg_integer()},
+          column_visits: %{non_neg_integer() => non_neg_integer()},
+          visited: %MapSet{}
+        }
+
+  @spec parse_boards([binary()], [Board.t()]) :: [Board.t()]
   def parse_boards([], result), do: result
 
   def parse_boards(input, result) do
@@ -81,8 +101,14 @@ defmodule Board do
     parse_boards(Enum.drop(input, 5), [board | result])
   end
 
+  @spec initialize_visits() :: %{non_neg_integer() => non_neg_integer()}
   defp initialize_visits(), do: for(x <- 0..4, do: {x, 0}) |> Map.new()
 
+  @spec update_map_for_row(
+          binary(),
+          %{non_neg_integer() => {non_neg_integer(), non_neg_integer()}},
+          non_neg_integer()
+        ) :: %{non_neg_integer() => {non_neg_integer(), non_neg_integer()}}
   def update_map_for_row(row, number_map, y) do
     numbers =
       String.split(row, " ", trim: true) |> Enum.map(&String.to_integer/1) |> Enum.with_index()
@@ -92,6 +118,7 @@ defmodule Board do
     end)
   end
 
+  @spec update_board(Board.t(), non_neg_integer()) :: Board.t()
   def update_board(board, draw_number) do
     square = Map.get(board.number_map, draw_number)
 
@@ -102,7 +129,7 @@ defmodule Board do
       column_visits = Map.update!(board.column_visits, x, &(&1 + 1))
       row_visits = Map.update!(board.row_visits, y, &(&1 + 1))
 
-      %{
+      %Board{
         board
         | column_visits: column_visits,
           row_visits: row_visits,
@@ -111,11 +138,13 @@ defmodule Board do
     end
   end
 
+  @spec check_if_win(Board.t(), non_neg_integer()) :: boolean()
   def check_if_win(board, draw_number) do
     square = Map.get(board.number_map, draw_number)
     square != nil and winning_row_or_column?(board, square)
   end
 
+  @spec calculate_score(Board.t(), non_neg_integer()) :: non_neg_integer()
   def calculate_score(board, last_number) do
     all_numbers = Map.keys(board.number_map)
 
@@ -125,6 +154,7 @@ defmodule Board do
     Enum.sum(remaining_numbers) * last_number
   end
 
+  @spec winning_row_or_column?(Board.t(), {non_neg_integer(), non_neg_integer()}) :: boolean()
   def winning_row_or_column?(board, {x, y}) do
     columns_visit_count = Map.get(board.column_visits, x)
     row_visit_count = Map.get(board.row_visits, y)
