@@ -17,4 +17,7 @@ defmodule Aoc2021.Helpers do
   end
 
   def unbits(bits), do: Integer.undigits(bits, 2)
+
+  def sign(c1, c1), do: 0
+  def sign(c1, c2), do: if(c2 > c1, do: 1, else: -1)
 end
