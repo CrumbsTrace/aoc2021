@@ -44,7 +44,7 @@ defmodule Aoc2021.Day5 do
   def get_line_points(x1, y1, x2, y2, table) do
     new_x1 = get_next_coord(x1, x2)
     new_y1 = get_next_coord(y1, y2)
-    coord = {x1, y2}
+    coord = {x1, y1}
 
     :ets.update_counter(table, coord, 1, {coord, 0})
     get_line_points(new_x1, new_y1, x2, y2, table)
