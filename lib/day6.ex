@@ -14,33 +14,28 @@ defmodule Aoc2021.Day6 do
   def p2(file), do: run(file, 256)
 
   defp run(file, days) do
-    fish_map = build_fish_map(file)
+    fish = build_fish(file)
 
-    Enum.reduce(0..(days - 1), fish_map, fn _, fish_map -> update_fish_map(fish_map) end)
+    Enum.reduce(0..(days - 1), fish, fn _, fish -> update_fish(fish) end)
     |> Map.values()
     |> Enum.sum()
   end
 
-  defp update_fish_map(fish_map) do
-    new_fish = Map.get(fish_map, 0, 0)
+  defp update_fish(fish) do
+    new_fish = Map.get(fish, 0, 0)
 
-    Enum.reduce(0..7, fish_map, &shift_fish_map_at_index/2)
+    Enum.reduce(0..7, fish, &Map.replace!(&2, &1, Map.get(&2, &1 + 1)))
     |> Map.replace!(8, new_fish)
     |> Map.update!(6, &(&1 + new_fish))
   end
 
-  defp shift_fish_map_at_index(index, fish_map) do
-    new_value = Map.get(fish_map, index + 1, 0)
-    Map.update!(fish_map, index, fn _ -> new_value end)
-  end
-
-  defp build_fish_map(file) do
+  defp build_fish(file) do
     parse_input(:lines, file)
     |> hd()
     |> String.split(",", trim: true)
     |> Enum.map(&String.to_integer/1)
-    |> Enum.reduce(preload_map(), fn fish_time, acc -> Map.update!(acc, fish_time, &(&1 + 1)) end)
+    |> Enum.reduce(preload_fish(), fn fish_time, acc -> Map.update!(acc, fish_time, &(&1 + 1)) end)
   end
 
-  defp preload_map, do: for(x <- 0..8, do: {x, 0}) |> Map.new()
+  defp preload_fish, do: for(x <- 0..8, do: {x, 0}) |> Map.new()
 end
