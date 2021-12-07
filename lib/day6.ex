@@ -1,6 +1,4 @@
 defmodule Aoc2021.Day6 do
-  import Aoc2021.Helpers
-
   @doc """
     iex> Aoc2021.Day6.p1("inputs/day6.txt")
     386536
@@ -16,26 +14,22 @@ defmodule Aoc2021.Day6 do
   defp run(file, days) do
     fish = build_fish(file)
 
-    Enum.reduce(0..(days - 1), fish, fn _, fish -> update_fish(fish) end)
-    |> Map.values()
-    |> Enum.sum()
+    1..days
+    |> Enum.reduce(fish, fn _, fishes -> update_fish(fishes) end)
+    |> Tuple.sum()
   end
 
-  defp update_fish(fish) do
-    new_fish = Map.get(fish, 0, 0)
-
-    Enum.reduce(0..7, fish, &Map.replace!(&2, &1, Map.get(&2, &1 + 1)))
-    |> Map.replace!(8, new_fish)
-    |> Map.update!(6, &(&1 + new_fish))
+  defp update_fish({f0, f1, f2, f3, f4, f5, f6, f7, f8}) do
+    {f1, f2, f3, f4, f5, f6, f7 + f0, f8, f0}
   end
 
   defp build_fish(file) do
-    parse_input(:lines, file)
-    |> hd()
-    |> String.split(",", trim: true)
-    |> Enum.map(&String.to_integer/1)
-    |> Enum.reduce(preload_fish(), fn fish_time, acc -> Map.update!(acc, fish_time, &(&1 + 1)) end)
-  end
+    frequencies =
+      File.read!(file)
+      |> String.split([",", "\n"], trim: true)
+      |> Enum.map(&String.to_integer/1)
+      |> Enum.frequencies()
 
-  defp preload_fish, do: for(x <- 0..8, do: {x, 0}) |> Map.new()
+    for(i <- 0..8, do: frequencies[i] || 0) |> List.to_tuple()
+  end
 end
