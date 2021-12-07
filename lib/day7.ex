@@ -29,10 +29,10 @@ defmodule Aoc2021.Day7 do
   defp calculate_fuel_constant(pos, crabs), do: Enum.map(crabs, &abs(&1 - pos)) |> Enum.sum()
 
   defp calculate_fuel_linear(crabs, pos) do
-    Enum.map(crabs, &sum_of_integers(abs(&1 - pos))) |> Enum.sum() |> trunc()
+    Enum.map(crabs, &sum_of_integers(abs(&1 - pos))) |> Enum.sum()
   end
 
-  defp sum_of_integers(number), do: number * (number + 1) / 2
+  defp sum_of_integers(number), do: trunc(number * (number + 1) / 2)
 
   def parse(file) do
     parse_input(:lines, file)
