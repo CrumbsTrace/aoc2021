@@ -12,6 +12,8 @@ defmodule Aoc2021.Day7 do
     |> calculate_fuel_constant(sorted_crabs)
   end
 
+  defp calculate_fuel_constant(pos, crabs), do: Enum.map(crabs, &abs(&1 - pos)) |> Enum.sum()
+
   @doc """
     iex> Aoc2021.Day7.p2("inputs/day7.txt")
     95167302
@@ -19,14 +21,24 @@ defmodule Aoc2021.Day7 do
   def p2(file) do
     crabs = parse(file)
     {min, max} = Enum.min_max(crabs)
-
-    for p <- min..max do
-      calculate_fuel_linear(crabs, p)
-    end
-    |> Enum.min()
+    find_best_fuel(div(max + min, 2), min, max, crabs)
   end
 
-  defp calculate_fuel_constant(pos, crabs), do: Enum.map(crabs, &abs(&1 - pos)) |> Enum.sum()
+  defp find_best_fuel(current, low, high, crabs) do
+    now = calculate_fuel_linear(crabs, current)
+    left = calculate_fuel_linear(crabs, current - 1)
+    right = calculate_fuel_linear(crabs, current + 1)
+
+    if left < now do
+      find_best_fuel(div(low + current, 2), low, current, crabs)
+    else
+      if right < now do
+        find_best_fuel(div(high + current, 2), current, high, crabs)
+      else
+        now
+      end
+    end
+  end
 
   defp calculate_fuel_linear(crabs, pos) do
     Enum.map(crabs, &sum_of_integers(abs(&1 - pos))) |> Enum.sum()
