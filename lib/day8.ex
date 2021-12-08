@@ -25,48 +25,44 @@ defmodule Aoc2021.Day8 do
   end
 
   defp solve([signals, clock]) do
-    solved =
-      [8, 1, 4, 7, 6, 5, 2, 3, 9, 0]
-      |> Enum.reduce(%{}, fn digit, solved -> determine_digit(digit, signals, solved) end)
+    [8, 1, 4, 7, 6, 5, 2, 3, 9, 0]
+    |> Enum.reduce(%{}, &Map.put(&2, &1, Enum.sort(find(&1, signals, &2))))
+    |> parse_clock(clock)
+  end
 
-    clock
-    |> Enum.map(&find_digit(solved, &1))
+  # Easy ones
+  defp find(1, line, _s), do: find_helper(line, 2, fn _ -> true end)
+  defp find(4, line, _s), do: find_helper(line, 4, fn _ -> true end)
+  defp find(7, line, _s), do: find_helper(line, 3, fn _ -> true end)
+  defp find(8, line, _s), do: find_helper(line, 7, fn _ -> true end)
+
+  # Comparisons with previously solved digits
+  defp find(2, line, s), do: find_helper(line, 5, fn p -> shared_letters(p, s[5]) == 3 end)
+  defp find(3, line, s), do: find_helper(line, 5, fn p -> shared_letters(p, s[5]) == 4 end)
+  defp find(5, line, s), do: find_helper(line, 5, fn p -> shared_letters(p, s[6]) == 5 end)
+  defp find(6, line, s), do: find_helper(line, 6, fn p -> shared_letters(p, s[1]) == 1 end)
+  defp find(9, line, s), do: find_helper(line, 6, fn p -> shared_letters(p, s[3]) == 5 end)
+
+  # Last remaining
+  defp find(0, line, s), do: find_helper(line, 6, fn p -> Enum.sort(p) not in Map.values(s) end)
+
+  defp find_helper(line, length, query) do
+    Enum.find(line, fn pattern -> length(pattern) == length and query.(pattern) end)
+  end
+
+  defp parse_clock(solved, clock) do
+    Enum.map(clock, &match_pattern_with_solution(solved, &1))
     |> Enum.join()
     |> String.to_integer()
   end
 
-  defp find_digit(solved, pattern) do
-    Enum.find(solved, fn {_, p} -> p == Enum.sort(pattern) end)
-    |> elem(0)
+  defp match_pattern_with_solution(solved, pattern) do
+    Enum.find(solved, fn {_, solution} -> solution == Enum.sort(pattern) end) |> elem(0)
   end
 
-  defp determine_digit(digit, line, solved) do
-    Map.put(solved, digit, Enum.sort(determine(digit, line, solved)))
-  end
+  defp shared_letters(p1, p2), do: Enum.count(p1, &(&1 in p2))
 
-  defp determine(0, line, s), do: Enum.find(line, &(Enum.sort(&1) not in Map.values(s)))
-  defp determine(1, line, _s), do: Enum.find(line, &(length(&1) == 2))
-  defp determine(2, line, s), do: Enum.find(line, fn p -> l(p, 5) and sharing(p, s[5]) == 3 end)
-  defp determine(3, line, s), do: Enum.find(line, fn p -> l(p, 5) and sharing(p, s[5]) == 4 end)
-  defp determine(4, line, _s), do: Enum.find(line, &(length(&1) == 4))
-  defp determine(5, line, s), do: Enum.find(line, fn p -> l(p, 5) and sharing(p, s[6]) == 5 end)
-  defp determine(6, line, s), do: Enum.find(line, fn p -> l(p, 6) and sharing(s[1], p) == 1 end)
-  defp determine(7, line, _s), do: Enum.find(line, &(length(&1) == 3))
-  defp determine(8, _line, _s), do: ["a", "b", "c", "d", "e", "f", "g"]
-  defp determine(9, line, s), do: Enum.find(line, fn p -> l(p, 6) and sharing(s[3], p) == 5 end)
-
-  defp l(p, n), do: length(p) == n
-
-  defp sharing(p1, p2), do: Enum.count(p1, &(&1 in p2))
-
-  defp parse(file) do
-    parse_input(:lines, file)
-    |> Enum.map(fn line ->
-      String.split(line, "|", trim: true)
-      |> Enum.map(
-        &(String.split(&1, " ", trim: true)
-          |> Enum.map(fn number -> String.split(number, "", trim: true) end))
-      )
-    end)
-  end
+  defp parse(file), do: parse_input(:lines, file) |> Enum.map(&parse_line/1)
+  defp parse_line(line), do: String.split(line, "|", trim: true) |> Enum.map(&parse_patterns/1)
+  defp parse_patterns(patterns), do: String.split(patterns) |> Enum.map(&String.codepoints/1)
 end
