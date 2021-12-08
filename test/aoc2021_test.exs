@@ -8,4 +8,5 @@ defmodule Aoc2021Test do
   doctest Aoc2021.Day5
   doctest Aoc2021.Day6
   doctest Aoc2021.Day7
+  doctest Aoc2021.Day8
 end
