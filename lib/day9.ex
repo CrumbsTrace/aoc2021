@@ -23,9 +23,9 @@ defmodule Aoc2021.Day9 do
     grid = parse(file)
     max_width = tuple_size(elem(grid, 0))
     max_height = tuple_size(grid)
-    lowest_points = get_lowest_points(grid, max_width, max_height)
 
-    Enum.map(lowest_points, &MapSet.size(get_basin(grid, &1, max_width, max_height)))
+    get_lowest_points(grid, max_width, max_height)
+    |> Enum.map(&MapSet.size(get_basin(grid, &1, max_width, max_height)))
     |> Enum.sort(:desc)
     |> Enum.take(3)
     |> Enum.product()
@@ -33,12 +33,16 @@ defmodule Aoc2021.Day9 do
 
   defp get_lowest_points(grid, max_width, max_height) do
     0..(max_height - 1)
-    |> Enum.reduce([], fn y, acc ->
-      acc ++
-        Enum.reduce(0..(max_width - 1), [], fn x, cell_acc ->
-          if lowest(grid, x, y, max_width, max_height), do: [{x, y} | cell_acc], else: cell_acc
+    |> Enum.reduce(
+      [],
+      fn y, acc ->
+        Enum.reduce(0..(max_width - 1), acc, fn x, cell_acc ->
+          if lowest?(grid, x, y, max_width, max_height),
+            do: [{x, y} | cell_acc],
+            else: cell_acc
         end)
-    end)
+      end
+    )
   end
 
   def get_basin(grid, point, m_w, m_h, seen \\ MapSet.new()) do
@@ -52,12 +56,12 @@ defmodule Aoc2021.Day9 do
 
   def get_neighbors({x, y}, max_width, max_height) do
     [{x - 1, y}, {x + 1, y}, {x, y - 1}, {x, y + 1}]
-    |> Enum.reject(fn {n_x, n_y} ->
-      n_x < 0 or n_x >= max_width or n_y < 0 or n_y >= max_height
-    end)
+    |> Enum.reject(&out_of_bounds?(&1, max_width, max_height))
   end
 
-  defp lowest(grid, x, y, m_w, m_h) do
+  defp out_of_bounds?({x, y}, m_w, m_h), do: x < 0 or x >= m_w or y < 0 or y >= m_h
+
+  defp lowest?(grid, x, y, m_w, m_h) do
     depth = get_depth(grid, {x, y})
 
     Enum.all?(get_neighbors({x, y}, m_w, m_h), fn neighbor ->
