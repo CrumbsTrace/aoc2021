@@ -18,4 +18,8 @@ Benchee.run(
     "Day8 p2" => fn -> Aoc2021.Day8.p2("inputs/day8.txt") end,
     "Day9 p1" => fn -> Aoc2021.Day9.p1("inputs/day9.txt") end,
     "Day9 p2" => fn -> Aoc2021.Day9.p2("inputs/day9.txt") end,
+    "Day10 p1" => fn -> Aoc2021.Day10.p1("inputs/day10.txt") end,
+    "Day10 p2" => fn -> Aoc2021.Day10.p2("inputs/day10.txt") end,
+    "Day11 p1" => fn -> Aoc2021.Day11.p1("inputs/day11.txt") end,
+    "Day11 p2" => fn -> Aoc2021.Day11.p2("inputs/day11.txt") end,
   }, warmup: 2, time: 5, memory_time: 1) 
