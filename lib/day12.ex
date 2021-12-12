@@ -24,24 +24,19 @@ defmodule Aoc2021.Day12 do
   def count_routes(caves, cave, block_revisit) do
     caves = Cave.mark_visited(caves, cave)
     edges = get_allowed_edges(cave, caves, block_revisit)
-
-    Enum.map(edges, &count_routes_edge(caves, caves[&1], block_revisit))
-    |> Enum.sum()
+    Enum.reduce(edges, 0, &(&2 + count_routes_edge(caves, caves[&1], block_revisit)))
   end
 
   def count_routes_edge(caves, edge, block_revisit),
-    do: count_routes(caves, edge, block_revisit or revisit?(edge))
+    do: count_routes(caves, edge, block_revisit or is_revisit?(edge))
 
   defp get_allowed_edges(cave, caves, block_revisit),
     do: Enum.filter(cave.edges, &allowed?(caves[&1], block_revisit))
 
-  defp allowed?(edge, allow_second_visit) do
-    if not allow_second_visit,
-      do: edge.name != "start",
-      else: not edge.small or not edge.visited
-  end
+  defp allowed?(_edge, false), do: true
+  defp allowed?(edge, _), do: not edge.small or not edge.visited
 
-  defp revisit?(edge), do: edge.small and edge.visited
+  defp is_revisit?(edge), do: edge.small and edge.visited
 
   defp build_cave_map(file),
     do: Enum.reduce(parse_input(:lines, file), %{}, &update_cave_map/2)
@@ -51,13 +46,19 @@ defmodule Aoc2021.Day12 do
     build_connection(map, from, to)
   end
 
-  defp build_connection(map, from, to) do
-    map = if map[from] == nil, do: Map.put_new(map, from, Cave.new(from)), else: map
-    map = if map[to] == nil, do: Map.put_new(map, to, Cave.new(to)), else: map
+  defp build_connection(caves, from, to) do
+    caves = if caves[from] == nil, do: Map.put_new(caves, from, Cave.new(from)), else: caves
+    caves = if caves[to] == nil, do: Map.put_new(caves, to, Cave.new(to)), else: caves
 
-    Map.update!(map, from, fn cave -> %{cave | edges: [to | cave.edges]} end)
-    |> Map.update!(to, fn cave -> %{cave | edges: [from | cave.edges]} end)
+    caves
+    |> update_edge(from, to)
+    |> update_edge(to, from)
   end
+
+  defp update_edge(caves, _from, "start"), do: caves
+
+  defp update_edge(caves, from, to),
+    do: Map.update!(caves, from, fn cave -> %{cave | edges: [to | cave.edges]} end)
 end
 
 defmodule Cave do
