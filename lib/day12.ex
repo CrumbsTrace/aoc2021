@@ -48,10 +48,10 @@ defmodule Aoc2021.Day12 do
 
   defp update_cave_map(line, map) do
     [from, to] = String.split(line, "-", trim: true)
-    build_connecton(map, from, to)
+    build_connection(map, from, to)
   end
 
-  defp build_connecton(map, from, to) do
+  defp build_connection(map, from, to) do
     map = if map[from] == nil, do: Map.put_new(map, from, Cave.new(from)), else: map
     map = if map[to] == nil, do: Map.put_new(map, to, Cave.new(to)), else: map
 
