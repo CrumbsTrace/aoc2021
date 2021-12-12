@@ -32,11 +32,8 @@ defmodule Aoc2021.Day12 do
   def count_routes_edge(caves, edge, block_revisit),
     do: count_routes(caves, edge, block_revisit or revisit?(edge))
 
-  defp get_allowed_edges(cave, caves, block_revisit) do
-    Enum.filter(cave.edges, fn edge ->
-      allowed?(caves[edge], block_revisit)
-    end)
-  end
+  defp get_allowed_edges(cave, caves, block_revisit),
+    do: Enum.filter(cave.edges, &allowed?(caves[&1], block_revisit))
 
   defp allowed?(edge, allow_second_visit) do
     if not allow_second_visit,
@@ -46,10 +43,8 @@ defmodule Aoc2021.Day12 do
 
   defp revisit?(edge), do: edge.small and edge.visited
 
-  defp build_cave_map(file) do
-    parse_input(:lines, file)
-    |> Enum.reduce(%{}, &update_cave_map/2)
-  end
+  defp build_cave_map(file),
+    do: Enum.reduce(parse_input(:lines, file), %{}, &update_cave_map/2)
 
   defp update_cave_map(line, map) do
     [from, to] = String.split(line, "-", trim: true)
