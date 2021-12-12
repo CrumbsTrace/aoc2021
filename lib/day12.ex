@@ -7,7 +7,7 @@ defmodule Aoc2021.Day12 do
   """
   def p1(file) do
     caves = build_cave_map(file)
-    traverse(caves, "start", MapSet.new(), false)
+    count_routes(caves, caves["start"], true)
   end
 
   @doc """
@@ -16,42 +16,35 @@ defmodule Aoc2021.Day12 do
   """
   def p2(file) do
     caves = build_cave_map(file)
-    traverse(caves, "start", MapSet.new(), true)
+    count_routes(caves, caves["start"], false)
   end
 
-  def traverse(_caves, "end", _visited, _allow_second_visit), do: 1
+  def count_routes(_caves, %{name: "end"}, _block_revisit), do: 1
 
-  def traverse(caves, current, visited, allow_second_visit) do
-    visited = MapSet.put(visited, current)
-    allowed_neighbors = get_allowed_neighbors(caves, current, visited, allow_second_visit)
+  def count_routes(caves, cave, block_revisit) do
+    caves = Cave.mark_visited(caves, cave)
+    edges = get_allowed_edges(cave, caves, block_revisit)
 
-    Enum.map(allowed_neighbors, fn neighbor ->
-      traverse(
-        caves,
-        neighbor,
-        visited,
-        allow_second_visit?(allow_second_visit, visited, neighbor, caves)
-      )
-    end)
+    Enum.map(edges, &count_routes_edge(caves, caves[&1], block_revisit))
     |> Enum.sum()
   end
 
-  defp get_allowed_neighbors(caves, current, visited, allow_second_visit) do
-    Enum.filter(caves[current].neighbors, fn neighbor ->
-      allowed?(neighbor, caves, visited, allow_second_visit)
+  def count_routes_edge(caves, edge, block_revisit),
+    do: count_routes(caves, edge, block_revisit or revisit?(edge))
+
+  defp get_allowed_edges(cave, caves, block_revisit) do
+    Enum.filter(cave.edges, fn edge ->
+      allowed?(caves[edge], block_revisit)
     end)
   end
 
-  defp allowed?(neighbor, _, _, true), do: neighbor != "start"
-
-  defp allowed?(neighbor, caves, visited, _allow_second_visit) do
-    not caves[neighbor].small or not MapSet.member?(visited, neighbor)
+  defp allowed?(edge, allow_second_visit) do
+    if not allow_second_visit,
+      do: edge.name != "start",
+      else: not edge.small or not edge.visited
   end
 
-  defp allow_second_visit?(false, _, _, _), do: false
-
-  defp allow_second_visit?(_allow_second_visit, visited, neighbor, caves),
-    do: not caves[neighbor].small or not MapSet.member?(visited, neighbor)
+  defp revisit?(edge), do: edge.small and edge.visited
 
   defp build_cave_map(file) do
     parse_input(:lines, file)
@@ -67,18 +60,22 @@ defmodule Aoc2021.Day12 do
     map = if map[from] == nil, do: Map.put_new(map, from, Cave.new(from)), else: map
     map = if map[to] == nil, do: Map.put_new(map, to, Cave.new(to)), else: map
 
-    Map.update!(map, from, fn cave -> %{cave | neighbors: [to | cave.neighbors]} end)
-    |> Map.update!(to, fn cave -> %{cave | neighbors: [from | cave.neighbors]} end)
+    Map.update!(map, from, fn cave -> %{cave | edges: [to | cave.edges]} end)
+    |> Map.update!(to, fn cave -> %{cave | edges: [from | cave.edges]} end)
   end
 end
 
 defmodule Cave do
-  defstruct [:small, :neighbors]
+  defstruct [:small, :edges, :name, visited: false]
 
   def new(name) do
     %Cave{
+      name: name,
       small: String.downcase(name) == name,
-      neighbors: []
+      edges: [],
+      visited: false
     }
   end
+
+  def mark_visited(caves, cave), do: Map.replace!(caves, cave.name, %{cave | visited: true})
 end
