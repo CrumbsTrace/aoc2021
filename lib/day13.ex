@@ -10,22 +10,21 @@ defmodule Aoc2021.Day13 do
 
     result =
       fold(points, hd(folds))
-      |> Enum.uniq()
-      |> Enum.count()
+      |> MapSet.new()
+      |> MapSet.size()
 
-    # part 2
-    # fold_all_and_print(points, folds)
+    fold_all_and_print(points, folds)
     result
   end
 
   defp fold(points, [direction, coord]) do
     fold_line = String.to_integer(coord)
 
-    Enum.map(points, fn {x, y} ->
+    Enum.map(points, fn {x, y} = point ->
       if direction == "x" do
-        if x > fold_line, do: {fold_line - (x - fold_line), y}, else: {x, y}
+        if x > fold_line, do: {fold_line - (x - fold_line), y}, else: point
       else
-        if y > fold_line, do: {x, fold_line - (y - fold_line)}, else: {x, y}
+        if y > fold_line, do: {x, fold_line - (y - fold_line)}, else: point
       end
     end)
   end
@@ -35,14 +34,17 @@ defmodule Aoc2021.Day13 do
     width = Enum.max_by(folded, fn {x, _} -> x end) |> elem(0)
     height = Enum.max_by(folded, fn {_, y} -> y end) |> elem(1)
 
+    folded = MapSet.new(folded)
+
     for y <- -1..height do
       for x <- 0..width do
-        if Enum.member?(folded, {x, y}), do: "#", else: " "
+        if MapSet.member?(folded, {x, y}), do: "#", else: " "
       end
     end
     |> Enum.map(&Enum.join(&1, ""))
     |> Enum.join("\n")
-    |> IO.puts()
+
+    # |> IO.puts()
   end
 
   defp parse(file) do
