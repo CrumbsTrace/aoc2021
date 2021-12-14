@@ -69,7 +69,7 @@ defmodule Aoc2021.Day14 do
   end
 
   defp setup_conversion(instruction) do
-    [pair, insert] = String.split(instruction, ["->", " "], trim: true)
+    [pair, insert] = String.split(instruction, " -> ", trim: true)
     {pair, {String.at(pair, 0) <> insert, insert <> String.at(pair, 1)}}
   end
 end
