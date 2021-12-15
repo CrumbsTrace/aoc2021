@@ -18,50 +18,57 @@ defmodule Aoc2021.Day15 do
     width = tuple_size(elem(field, 1))
     height = tuple_size(field)
 
+    start = {0, 0}
+    finish = if(times_five, do: {width * 5 - 1, height * 5 - 1}, else: {width - 1, height - 1})
     grid = Grid.new(field, width, height)
+    g_score_map = %{{0, 0} => 0}
+    priority_map = %{{0, 0} => euclidean_distance(start, finish)}
 
     find_shortest_path(
       grid,
-      {0, 0},
-      if(times_five, do: {width * 5 - 1, height * 5 - 1}, else: {width - 1, height - 1}),
-      -get_risk(grid, {0, 0}),
-      MapSet.new(),
+      g_score_map,
+      finish,
+      priority_map,
       times_five
     )
-    |> get_result(times_five)
   end
 
-  defp get_result(grid, false), do: grid.shortest_paths[{grid.width - 1, grid.height - 1}]
-  defp get_result(grid, true), do: grid.shortest_paths[{grid.width * 5 - 1, grid.height * 5 - 1}]
+  defp find_shortest_path(grid, g_score_map, target, priority_map, times_five) do
+    {position, _risk} = Enum.min_by(priority_map, &elem(&1, 1))
 
-  defp find_shortest_path(grid, target, target, current_risk, _visited, _times_five) do
-    risk = get_risk(grid, target)
-    Grid.update_shortest_paths(grid, target, risk + current_risk)
-  end
-
-  defp find_shortest_path(grid, position, target, current_risk, visited, times_five) do
-    existing_value = grid.shortest_paths[position]
-    current_risk = current_risk + get_risk(grid, position)
-
-    if existing_value <= current_risk or
-         grid.shortest_paths[target] <= current_risk + euclidean_distance(position, target) do
-      grid
+    if position == target do
+      g_score_map[position]
     else
-      grid = Grid.update_shortest_paths(grid, position, current_risk)
-      visited = MapSet.put(visited, position)
-      neighbors = neighbors(grid, position, target, visited, times_five)
+      priority_map = Map.delete(priority_map, position)
 
-      Enum.reduce(neighbors, grid, fn neighbor, grid ->
-        find_shortest_path(grid, neighbor, target, current_risk, visited, times_five)
-      end)
+      {priority_map, g_score_map} =
+        Enum.reduce(
+          neighbors(grid, position, times_five),
+          {priority_map, g_score_map},
+          fn neighbor, {priority_map, g_score_map} ->
+            new_g_score = g_score_map[position] + get_risk(grid, neighbor)
+            old_g_score = g_score_map[neighbor]
+
+            if old_g_score == nil or new_g_score < old_g_score do
+              g_score_map =
+                Map.update(g_score_map, neighbor, new_g_score, fn _ -> new_g_score end)
+
+              f_score = new_g_score + euclidean_distance(neighbor, target)
+              priority_map = Map.update(priority_map, neighbor, f_score, fn _ -> f_score end)
+              {priority_map, g_score_map}
+            else
+              {priority_map, g_score_map}
+            end
+          end
+        )
+
+      find_shortest_path(grid, g_score_map, target, priority_map, times_five)
     end
   end
 
-  defp neighbors(grid, {p_x, p_y}, target, visited, times_five) do
+  defp neighbors(grid, {p_x, p_y}, times_five) do
     [{p_x - 1, p_y}, {p_x + 1, p_y}, {p_x, p_y - 1}, {p_x, p_y + 1}]
     |> Enum.reject(&out_of_bounds?(&1, grid.width, grid.height, times_five))
-    |> Enum.reject(&MapSet.member?(visited, &1))
-    |> Enum.sort_by(&(euclidean_distance(&1, target) + get_risk(grid, &1)))
   end
 
   defp euclidean_distance({p_x, p_y}, {t_x, t_y}), do: abs(t_y - p_y) + abs(t_x - p_x)
@@ -78,8 +85,11 @@ defmodule Aoc2021.Day15 do
     new_x = rem(x, grid.width)
     new_y = rem(y, grid.height)
     offset = div(x, grid.width) + div(y, grid.height)
-    rem(elem(elem(grid.field, new_y), new_x) + offset, 10)
+    flow_over(elem(elem(grid.field, new_y), new_x) + offset)
   end
+
+  defp flow_over(risk) when risk < 10, do: risk
+  defp flow_over(risk), do: flow_over(risk - 9)
 
   defp parse(file) do
     parse_input(:lines, file)
@@ -93,24 +103,13 @@ defmodule Aoc2021.Day15 do
 end
 
 defmodule Grid do
-  defstruct [:field, :width, :height, :shortest_paths]
+  defstruct [:field, :width, :height]
 
   def new(field, width, height) do
     %Grid{
       field: field,
       width: width,
-      height: height,
-      shortest_paths: %{}
+      height: height
     }
   end
-
-  def update_shortest_paths(grid, position, length),
-    do: %Grid{
-      grid
-      | shortest_paths:
-          if(grid.shortest_paths[position] > length,
-            do: Map.update(grid.shortest_paths, position, length, &min(&1, length)),
-            else: grid.shortest_paths
-          )
-    }
 end
