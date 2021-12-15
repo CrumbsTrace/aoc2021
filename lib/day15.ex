@@ -9,7 +9,7 @@ defmodule Aoc2021.Day15 do
 
   @doc """
     iex> Aoc2021.Day15.p2("inputs/day15.txt")
-    23600
+    2814
   """
   def p2(file), do: run(file, true)
 
@@ -24,13 +24,7 @@ defmodule Aoc2021.Day15 do
     g_score_map = %{{0, 0} => 0}
     priority_map = %{{0, 0} => euclidean_distance(start, finish)}
 
-    find_shortest_path(
-      grid,
-      g_score_map,
-      finish,
-      priority_map,
-      times_five
-    )
+    find_shortest_path(grid, g_score_map, finish, priority_map, times_five)
   end
 
   defp find_shortest_path(grid, g_score_map, target, priority_map, times_five) do
@@ -77,7 +71,7 @@ defmodule Aoc2021.Day15 do
     if times_five do
       x < 0 or x >= 5 * m_w or y < 0 or y >= 5 * m_h
     else
-      x < 0 or x >= 5 * m_w or y < 0 or y >= 5 * m_h
+      x < 0 or x >= m_w or y < 0 or y >= m_h
     end
   end
 
