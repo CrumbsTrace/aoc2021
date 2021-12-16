@@ -19,27 +19,29 @@ defmodule Aoc2021.Day15 do
     height = tuple_size(field)
 
     start = {0, 0}
+
     finish = if(times_five, do: {width * 5 - 1, height * 5 - 1}, else: {width - 1, height - 1})
     grid = Grid.new(field, width, height)
-    g_score_map = %{{0, 0} => 0}
-    priority_map = %{{0, 0} => euclidean_distance(start, finish)}
 
-    find_shortest_path(grid, g_score_map, finish, priority_map, times_five)
+    g_score_map = %{start => 0}
+
+    priority_queue =
+      Prioqueue.new([{start, euclidean_distance(start, finish)}], cmp_fun: &comparison/2)
+
+    find_shortest_path(grid, g_score_map, priority_queue, finish, times_five)
   end
 
-  defp find_shortest_path(grid, g_score_map, target, priority_map, times_five) do
-    {position, _risk} = Enum.min_by(priority_map, &elem(&1, 1))
+  defp find_shortest_path(grid, g_score_map, priority_queue, target, times_five) do
+    {{position, _}, priority_queue} = Prioqueue.extract_min!(priority_queue)
 
     if position == target do
       g_score_map[position]
     else
-      priority_map = Map.delete(priority_map, position)
-
-      {priority_map, g_score_map} =
+      {priority_queue, g_score_map} =
         Enum.reduce(
           neighbors(grid, position, times_five),
-          {priority_map, g_score_map},
-          fn neighbor, {priority_map, g_score_map} ->
+          {priority_queue, g_score_map},
+          fn neighbor, {priority_queue, g_score_map} ->
             new_g_score = g_score_map[position] + get_risk(grid, neighbor)
             old_g_score = g_score_map[neighbor]
 
@@ -48,15 +50,15 @@ defmodule Aoc2021.Day15 do
                 Map.update(g_score_map, neighbor, new_g_score, fn _ -> new_g_score end)
 
               f_score = new_g_score + euclidean_distance(neighbor, target)
-              priority_map = Map.update(priority_map, neighbor, f_score, fn _ -> f_score end)
-              {priority_map, g_score_map}
+              priority_queue = Prioqueue.insert(priority_queue, {neighbor, f_score})
+              {priority_queue, g_score_map}
             else
-              {priority_map, g_score_map}
+              {priority_queue, g_score_map}
             end
           end
         )
 
-      find_shortest_path(grid, g_score_map, target, priority_map, times_five)
+      find_shortest_path(grid, g_score_map, priority_queue, target, times_five)
     end
   end
 
@@ -94,6 +96,10 @@ defmodule Aoc2021.Day15 do
     end)
     |> List.to_tuple()
   end
+
+  defp comparison({_, a}, {_, b}) when a < b, do: :lt
+  defp comparison({_, a}, {_, b}) when a == b, do: :eq
+  defp comparison({_, _a}, {_, _b}), do: :gt
 end
 
 defmodule Grid do
