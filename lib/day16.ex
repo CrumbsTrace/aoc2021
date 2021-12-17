@@ -23,6 +23,7 @@ defmodule Aoc2021.Day16 do
     version = Integer.undigits([v1, v2, v3], 2)
     type = Integer.undigits([t1, t2, t3], 2)
     versions = [version | versions]
+
     decode_type(type, bits, versions, values, [])
   end
 
