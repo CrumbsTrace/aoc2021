@@ -33,7 +33,7 @@ defmodule Aoc2021.Day17 do
   def move({p_x, p_y}, {v_x, v_y}), do: {p_x + v_x, p_y + v_y}
 
   def update_velocity({0, v_y}), do: {0, v_y - 1}
-  def update_velocity({v_x, v_y}), do: {v_x - div(v_x, abs(v_x)), v_y - 1}
+  def update_velocity({v_x, v_y}), do: {v_x - 1, v_y - 1}
 
   defp parse(file) do
     hd(parse_input(:lines, file))
