@@ -33,6 +33,8 @@ Benchee.run(
     "Day16 p2" => fn -> Aoc2021.Day16.p2("inputs/day16.txt") end,
     "Day17 p1" => fn -> Aoc2021.Day17.p1("inputs/day17.txt") end,
     "Day17 p2" => fn -> Aoc2021.Day17.p2("inputs/day17.txt") end,
+    "Day18 p1" => fn -> Aoc2021.Day18.p1("inputs/day18.txt") end,
+    "Day18 p2" => fn -> Aoc2021.Day18.p2("inputs/day18.txt") end,
   },
   warmup: 2,
   time: 5,

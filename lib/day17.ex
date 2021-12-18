@@ -32,7 +32,7 @@ defmodule Aoc2021.Day17 do
 
   # The minimum x to reach the field is would be where the sum of integers for this value reaches the left bound
   # This is an approximation that guarantees to be less than this value but pretty close
-  defp lower_bound_x(x_min), do: floor(:math.sqrt(x_min * 2))
+  defp lower_bound_x(x_min), do: trunc(:math.sqrt(x_min * 2))
 
   def new_v_x(0), do: 0
   def new_v_x(v_x), do: v_x - 1
