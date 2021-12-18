@@ -26,13 +26,14 @@ defmodule Aoc2021.Day15 do
     g_score_map = %{start => 0}
 
     priority_queue =
-      Prioqueue.new([{start, euclidean_distance(start, finish)}], cmp_fun: &comparison/2)
+      PriorityQueue.new()
+      |> PriorityQueue.push(start, 0)
 
     find_shortest_path(grid, g_score_map, priority_queue, finish, times_five)
   end
 
   defp find_shortest_path(grid, g_score_map, priority_queue, target, times_five) do
-    {{position, _}, priority_queue} = Prioqueue.extract_min!(priority_queue)
+    {{_, position}, priority_queue} = PriorityQueue.pop(priority_queue)
 
     if position == target do
       g_score_map[position]
@@ -49,8 +50,7 @@ defmodule Aoc2021.Day15 do
               g_score_map =
                 Map.update(g_score_map, neighbor, new_g_score, fn _ -> new_g_score end)
 
-              f_score = new_g_score + euclidean_distance(neighbor, target)
-              priority_queue = Prioqueue.insert(priority_queue, {neighbor, f_score})
+              priority_queue = PriorityQueue.push(priority_queue, neighbor, new_g_score)
               {priority_queue, g_score_map}
             else
               {priority_queue, g_score_map}
@@ -66,8 +66,6 @@ defmodule Aoc2021.Day15 do
     [{p_x - 1, p_y}, {p_x + 1, p_y}, {p_x, p_y - 1}, {p_x, p_y + 1}]
     |> Enum.reject(&out_of_bounds?(&1, grid.width, grid.height, times_five))
   end
-
-  defp euclidean_distance({p_x, p_y}, {t_x, t_y}), do: abs(t_y - p_y) + abs(t_x - p_x)
 
   defp out_of_bounds?({x, y}, m_w, m_h, times_five) do
     if times_five do
@@ -96,10 +94,6 @@ defmodule Aoc2021.Day15 do
     end)
     |> List.to_tuple()
   end
-
-  defp comparison({_, a}, {_, b}) when a < b, do: :lt
-  defp comparison({_, a}, {_, b}) when a == b, do: :eq
-  defp comparison({_, _a}, {_, _b}), do: :gt
 end
 
 defmodule Grid do

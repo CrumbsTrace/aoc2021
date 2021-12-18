@@ -23,23 +23,20 @@ defmodule Aoc2021.Day18 do
   end
 
   defp run(numbers) do
-    Enum.reduce(numbers, &explode_till_no_action([&2, &1]))
+    Enum.reduce(numbers, &explode_and_split([&2, &1]))
   end
 
-  defp explode_till_no_action(input) do
+  defp explode_and_split(input) do
     # IO.inspect(input, charlists: :as_lists)
-    {result, action} = explode(input, 0, false)
+    case explode(input, 0) do
+      {result, nil} ->
+        case check_split(result) do
+          {result, nil} -> result
+          {result, _} -> explode_and_split(result)
+        end
 
-    if action == nil do
-      {result, action} = check_split(result)
-
-      if action == nil do
-        result
-      else
-        explode_till_no_action(result)
-      end
-    else
-      explode_till_no_action(result)
+      {result, _} ->
+        explode_and_split(result)
     end
   end
 
@@ -47,63 +44,51 @@ defmodule Aoc2021.Day18 do
   defp check_split(x) when is_integer(x), do: {x, nil}
 
   defp check_split([x, y]) do
-    {result, progress} = check_split(x)
+    case check_split(x) do
+      {_, nil} ->
+        {result, progress} = check_split(y)
+        {[x, result], progress}
 
-    if progress == nil do
-      {result, progress} = check_split(y)
-      {[x, result], progress}
-    else
-      {[result, y], :done}
+      {result, _} ->
+        {[result, y], :done}
     end
   end
 
-  defp explode(n, _depth, _) when is_integer(n), do: {n, nil}
-  defp explode(pair, 4, _), do: {pair, :explode}
+  defp explode(n, _depth) when is_integer(n), do: {n, nil}
+  defp explode(pair, 4), do: {pair, :explode}
 
-  defp explode([x, y], depth, allow_splits) do
-    {left, action} = explode(x, depth + 1, allow_splits)
+  defp explode([x, y], depth) do
+    {left, action} = explode(x, depth + 1)
 
     case action do
-      :done ->
-        {[left, y], :done}
+      :done -> {[left, y], :done}
+      :explode -> {[0, add_left(y, left)], {:right, Enum.at(left, 0)}}
+      {:right, _value} -> {[left, y], action}
+      {:left, value} -> {[left, add_left(y, value)], :done}
+      nil -> handle_right_explosion([x, y], depth)
+    end
+  end
 
-      :explode ->
-        {[0, add_left(y, Enum.at(left, 1))], {:add_right_most, Enum.at(left, 0)}}
+  defp handle_right_explosion([left, right], depth) do
+    {right, action} = explode(right, depth + 1)
 
-      {:add_right_most, _value} ->
-        {[left, y], action}
-
-      {:add_left_most, value} ->
-        {[left, add_left(y, value)], :done}
-
-      nil ->
-        {right, action} = explode(y, depth + 1, allow_splits)
-
-        case action do
-          :done ->
-            {[left, right], :done}
-
-          :explode ->
-            {[add_right(left, Enum.at(right, 0)), 0], {:add_left_most, Enum.at(right, 1)}}
-
-          {:add_right_most, value} ->
-            {[add_right(left, value), right], :done}
-
-          {:add_left_most, _value} ->
-            {[left, right], action}
-
-          nil ->
-            {[left, right], nil}
-        end
+    case action do
+      :done -> {[left, right], :done}
+      :explode -> {[add_right(left, right), 0], {:left, Enum.at(right, 1)}}
+      {:right, value} -> {[add_right(left, value), right], :done}
+      {:left, _value} -> {[left, right], action}
+      nil -> {[left, right], nil}
     end
   end
 
   defp magnitude(x) when is_integer(x), do: x
   defp magnitude([x, y]), do: magnitude(x) * 3 + 2 * magnitude(y)
 
+  defp add_right(l, list) when is_list(list), do: add_right(l, Enum.at(list, 0))
   defp add_right(n, value) when is_integer(n), do: n + value
   defp add_right([x, y], value), do: [x, add_right(y, value)]
 
+  defp add_left(l, list) when is_list(list), do: add_left(l, Enum.at(list, 1))
   defp add_left(n, value) when is_integer(n), do: n + value
   defp add_left([x, y], value), do: [add_left(x, value), y]
 
