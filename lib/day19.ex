@@ -8,7 +8,7 @@ defmodule Aoc2021.Day19 do
   def p1(file) do
     {solved, remaining} = parse(file)
 
-    solve_offsets(solved, solved, remaining)
+    solve_offsets(solved, [], remaining)
     |> Enum.map(&elem(&1, 1))
     |> Enum.reduce(MapSet.new(), &MapSet.union(&2, MapSet.new(&1)))
     |> MapSet.size()
@@ -21,32 +21,27 @@ defmodule Aoc2021.Day19 do
   def p2(file) do
     {solved, remaining} = parse(file)
 
-    solve_offsets(solved, solved, remaining)
+    solve_offsets(solved, [], remaining)
     |> Enum.map(&elem(&1, 0))
     |> all_combinations()
     |> Enum.map(fn {p1, p2} -> manhattan(p1, p2) end)
     |> Enum.max()
   end
 
-  defp solve_offsets(_, solved, []), do: solved
+  defp solve_offsets(to_try, solved, []), do: to_try ++ solved
 
   defp solve_offsets([hd | to_try], solved, to_solve) do
     {new_solved, to_solve} = solve_scanner(hd, to_solve)
-
-    if new_solved != nil do
-      solve_offsets(to_try ++ new_solved, solved ++ new_solved, to_solve)
-    else
-      solve_offsets(to_try, solved, to_solve)
-    end
+    solve_offsets(new_solved ++ to_try, [hd | solved], to_solve)
   end
 
   defp solve_scanner({_, beacons}, to_solve) do
-    Enum.reduce(to_solve, {[], []}, fn scanner, {solved, to_solve} ->
+    Enum.reduce(to_solve, {[], to_solve}, fn scanner, {solved, to_solve} = c ->
       solution = solve(beacons, scanner)
 
       if solution != nil,
-        do: {[solution | solved], to_solve},
-        else: {solved, [scanner | to_solve]}
+        do: {[solution | solved], Enum.filter(to_solve, &(&1 != scanner))},
+        else: c
     end)
   end
 
