@@ -6,12 +6,11 @@ defmodule Aoc2021.Day19 do
     308
   """
   def p1(file) do
-    scanners = parse(file)
+    {solved, remaining} = parse(file)
 
-    solve_offsets(scanners)
-    |> Map.values()
-    |> Enum.map(& &1.beacons)
-    |> Enum.reduce(MapSet.new(), &MapSet.union(&2, &1))
+    solve_offsets(solved, solved, remaining)
+    |> Enum.map(&elem(&1, 1))
+    |> Enum.reduce(MapSet.new(), &MapSet.union(&2, MapSet.new(&1)))
     |> MapSet.size()
   end
 
@@ -20,75 +19,56 @@ defmodule Aoc2021.Day19 do
     12124
   """
   def p2(file) do
-    scanners = parse(file)
+    {solved, remaining} = parse(file)
 
-    solve_offsets(scanners)
-    |> Map.values()
-    |> Enum.map(& &1.position)
+    solve_offsets(solved, solved, remaining)
+    |> Enum.map(&elem(&1, 0))
     |> all_combinations()
     |> Enum.map(fn {p1, p2} -> manhattan(p1, p2) end)
     |> Enum.max()
   end
 
-  defp solve_offsets(scanners, already_tried \\ []) do
-    scanners_to_try =
-      Map.values(scanners) |> Enum.filter(&(&1.beacons != nil and &1.index not in already_tried))
+  defp solve_offsets(_, solved, []), do: solved
 
-    scanners = Enum.reduce(scanners_to_try, scanners, &position_scanners/2)
+  defp solve_offsets([hd | to_try], solved, to_solve) do
+    {new_solved, to_solve} = solve_scanner(hd, to_solve)
 
-    solved_scanner_count = Map.values(scanners) |> Enum.count(&(&1.beacons != nil))
-
-    if solved_scanner_count == map_size(scanners) do
-      scanners
+    if new_solved != nil do
+      solve_offsets(to_try ++ new_solved, solved ++ new_solved, to_solve)
     else
-      used_scanners = Enum.map(scanners_to_try, & &1.index)
-      solve_offsets(scanners, used_scanners ++ already_tried)
+      solve_offsets(to_try, solved, to_solve)
     end
   end
 
-  defp position_scanners(solved_scanner, scanners) do
-    unsolved_scanners = Enum.filter(scanners, &(elem(&1, 1).beacons == nil))
-    Enum.reduce(unsolved_scanners, scanners, &position_if_match(solved_scanner, &1, &2))
+  defp solve_scanner({_, beacons}, to_solve) do
+    Enum.reduce(to_solve, {[], []}, fn scanner, {solved, to_solve} ->
+      solution = solve(beacons, scanner)
+
+      if solution != nil,
+        do: {[solution | solved], to_solve},
+        else: {solved, [scanner | to_solve]}
+    end)
   end
 
-  defp position_if_match(solved_scanner, {key, scanner}, scanners) do
-    result =
-      Enum.map(
-        scanner.beacon_options,
-        &overlaps?(MapSet.to_list(solved_scanner.beacons), solved_scanner.beacons, &1)
-      )
-      |> Enum.find(fn {overlaps, _} -> overlaps end)
+  defp solve(absolute_beacons, scanner) do
+    Enum.find_value(scanner.beacon_options, fn option ->
+      offset = find_offset(option, absolute_beacons)
 
-    if result != nil do
-      {_, {offset, beacons}} = result
-      Map.replace!(scanners, key, Scanner.update_scanner(scanner, beacons, offset))
-    else
-      scanners
-    end
+      if offset != nil do
+        beacons = Enum.map(option, &offset(&1, offset))
+        {offset, beacons}
+      end
+    end)
   end
 
-  defp overlaps?([], _beacons1, _beacons2), do: {false, nil}
+  defp find_offset(beacons_left, _solved_beacons) when length(beacons_left) < 12, do: nil
 
-  defp overlaps?([beacon | tail], beacons1, beacons2) do
-    possible_offsets =
-      Enum.map(
-        beacons2,
-        &offset(&1, beacon)
-      )
-
-    positioned =
-      Enum.map(possible_offsets, fn offset ->
-        {offset, MapSet.new(beacons2, &offset(&1, offset))}
-      end)
-      |> Enum.find(fn {_offset, mapset} ->
-        MapSet.size(MapSet.intersection(beacons1, mapset)) >= 12
-      end)
-
-    if positioned != nil do
-      {true, positioned}
-    else
-      overlaps?(tail, beacons1, beacons2)
-    end
+  defp find_offset([beacon | tail] = beacons, solved_beacons) do
+    Enum.find_value(solved_beacons, find_offset(tail, solved_beacons), fn solved_beacon ->
+      offset = offset(beacon, solved_beacon)
+      overlap_count = Enum.count(beacons, &Enum.member?(solved_beacons, offset(&1, offset)))
+      if overlap_count >= 12, do: offset
+    end)
   end
 
   defp manhattan({x1, y1, z1}, {x2, y2, z2}), do: abs(x1 - x2) + abs(y1 - y2) + abs(z1 - z2)
@@ -97,13 +77,8 @@ defmodule Aoc2021.Day19 do
 
   defp parse(file) do
     lines = parse_input(:lines, file)
-    scanners = parse_scanners(lines) |> Enum.with_index()
-
-    Map.new(scanners, fn {beacons, index} -> {index, Scanner.new(beacons, index)} end)
-    |> Map.update!(
-      0,
-      &Scanner.update_scanner(&1, MapSet.new(Enum.at(&1.beacon_options, 0)), {0, 0, 0})
-    )
+    [head | rest] = parse_scanners(lines)
+    {[{{0, 0, 0}, head}], Enum.map(rest, fn beacons -> Scanner.new(beacons) end)}
   end
 
   defp all_combinations([_]), do: []
@@ -125,29 +100,24 @@ defmodule Aoc2021.Day19 do
     beacons =
       Enum.take_while(lines, &(not String.contains?(&1, "scanner")))
       |> Enum.map(fn line ->
-        String.split(line, ",", trim: true) |> Enum.map(&String.to_integer/1)
+        String.split(line, ",", trim: true) |> Enum.map(&String.to_integer/1) |> List.to_tuple()
       end)
 
-    [MapSet.new(beacons) | parse_scanners(Enum.drop(lines, length(beacons)))]
+    [beacons | parse_scanners(Enum.drop(lines, length(beacons)))]
   end
 end
 
 defmodule Scanner do
-  defstruct [:beacons, :beacon_options, :position, :index]
+  defstruct [:beacon_options]
 
-  def new(beacons, index) do
+  def new(beacons) do
     %Scanner{
-      beacon_options: generate_beacon_options(beacons),
-      index: index
+      beacon_options: generate_beacon_options(beacons)
     }
   end
 
-  def update_scanner(scanner, beacons, position) do
-    %Scanner{scanner | beacons: beacons, position: position}
-  end
-
   defp generate_beacon_options(beacons) do
-    Enum.map(beacons, fn [x, y, z] ->
+    Enum.map(beacons, fn {x, y, z} ->
       [
         {x, y, z},
         {x, -z, y},

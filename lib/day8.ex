@@ -51,8 +51,7 @@ defmodule Aoc2021.Day8 do
   end
 
   defp parse_clock(solved, clock) do
-    Enum.map(clock, &match_pattern_with_solution(solved, &1))
-    |> Enum.join()
+    Enum.map_join(clock, &match_pattern_with_solution(solved, &1))
     |> String.to_integer()
   end
 

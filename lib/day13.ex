@@ -41,8 +41,7 @@ defmodule Aoc2021.Day13 do
         if MapSet.member?(folded, {x, y}), do: "#", else: " "
       end
     end
-    |> Enum.map(&Enum.join(&1, ""))
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", &Enum.join(&1, ""))
 
     # |> IO.puts()
   end
