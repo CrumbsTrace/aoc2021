@@ -19,5 +19,6 @@ defmodule Aoc2021Test do
   # doctest Aoc2021.Day16
   # doctest Aoc2021.Day17
   # doctest Aoc2021.Day18
-  doctest Aoc2021.Day19
+  # doctest Aoc2021.Day19
+  doctest Aoc2021.Day20
 end
