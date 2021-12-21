@@ -9,7 +9,7 @@ defmodule Aoc2021.Day20 do
 
   @doc """
     iex> Aoc2021.Day20.p2("inputs/day20.txt")
-    53790
+    20097
   """
   def p2(file), do: run(file, 50)
 
