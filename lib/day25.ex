@@ -3,7 +3,7 @@ defmodule Aoc2021.Day25 do
 
   @doc """
     iex> Aoc2021.Day25.p1("inputs/day25.txt")
-    742257
+    386
   """
   def p1(file) do
     input = parse(file)
